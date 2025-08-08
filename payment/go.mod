@@ -1,8 +1,6 @@
-module github.com/huseyinbabal/microservices/payment
+module github.com/filipe-rds/microservices/payment
 
 go 1.24.5
-
-require github.com/ruandg/microservices-proto/golang/payment v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/sirupsen/logrus v1.9.0
@@ -27,11 +25,13 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.3.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 )
 
-replace github.com/ruandg/microservices-proto/golang/payment => ../../microservices-proto/golang/payment
+require github.com/filipe-rds/microservices-proto/golang/payment v0.0.0-20250807233235-ea897d9260e2
+
+replace github.com/filipe-rds/microservices-proto/golang/payment => ../../microservices-proto/golang/payment

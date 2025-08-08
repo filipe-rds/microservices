@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/huseyinbabal/microservices/payment/internal/application/core/domain"
-	"github.com/huseyinbabal/microservices/payment/internal/ports"
+	"github.com/filipe-rds/microservices/payment/internal/application/core/domain"
+	"github.com/filipe-rds/microservices/payment/internal/ports"
 )
 
 type Application struct {

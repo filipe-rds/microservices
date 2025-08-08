@@ -6,7 +6,7 @@ import (
 	"github.com/filipe-rds/microservices/order/config"
 	"github.com/filipe-rds/microservices/order/internal/adapters/db"
 	"github.com/filipe-rds/microservices/order/internal/adapters/grpc"
-	"github.com/filipe-rds/microservices/order/internal/adapters/payment"
+	payment_adapter "github.com/filipe-rds/microservices/order/internal/adapters/payment"
 
 	// "github.com/filipe-rds/microservices/order/internal/adapters/rest"
 	"github.com/filipe-rds/microservices/order/internal/application/core/api"
