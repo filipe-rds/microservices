@@ -2,9 +2,8 @@ package payment_adapter
 
 import (
 	"context"
-	"log"
 
-	paymentpb "github.com/filipe-rds/microservices-proto/golang/payment"
+	"github.com/filipe-rds/microservices-proto/golang/payment"
 	"github.com/filipe-rds/microservices/order/internal/application/core/domain"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,7 +11,7 @@ import (
 
 
 type Adapter struct {
-	payment paymentpb.PaymentClient
+	payment payment.PaymentClient
 }
 
 func NewAdapter(paymentServiceUrl string) (*Adapter, error) {
@@ -20,17 +19,15 @@ func NewAdapter(paymentServiceUrl string) (*Adapter, error) {
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	conn, err := grpc.Dial(paymentServiceUrl, opts...)
 	if err != nil {
-		return nil, err
+		return nil, err 
 	}
-
-	client := paymentpb.NewPaymentClient(conn)
-
+	client := payment.NewPaymentClient(conn)
 	return &Adapter{payment: client}, nil
 }
 
 func (a *Adapter) Charge(order *domain.Order) error {
-	_, err := a.payment.Create(context.Background(), &paymentpb.CreatePaymentRequest{
-		CostumerID: order.CostumerID,
+	_, err := a.payment.Create(context.Background(), &payment.CreatePaymentRequest{
+		CustomerId: order.CustomerID,
 		OrderId: order.ID,
 		TotalPrice: order.TotalPrice(),
 	})

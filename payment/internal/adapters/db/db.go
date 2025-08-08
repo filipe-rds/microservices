@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"github.com/filipe-rds/microservices/payment/internal/application/core/domain"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/mysql"
@@ -11,7 +12,7 @@ import (
 
 type Payment struct {
 	gorm.Model
-	CostumerID int64
+	CustomerID int64
 	Status     string
 	OrderID    int64
 	TotalPrice float32
@@ -26,7 +27,7 @@ func (a Adapter) Get(ctx context.Context, id string) (domain.Payment, error) {
 	res := a.db.WithContext(ctx).First(&paymentEntity, id)
 	payment := domain.Payment{
 		ID:         int64(paymentEntity.ID),
-		CostumerID: paymentEntity.CostumerID,
+		CustomerID: paymentEntity.CustomerID,
 		Status:     paymentEntity.Status,
 		OrderId:    paymentEntity.OrderID,
 		TotalPrice: paymentEntity.TotalPrice,
@@ -37,7 +38,7 @@ func (a Adapter) Get(ctx context.Context, id string) (domain.Payment, error) {
 
 func (a Adapter) Save(ctx context.Context, payment *domain.Payment) error {
 	orderModel := Payment{
-		CostumerID: payment.CostumerID,
+		CustomerID: payment.CustomerID,
 		Status:     payment.Status,
 		OrderID:    payment.OrderId,
 		TotalPrice: payment.TotalPrice,

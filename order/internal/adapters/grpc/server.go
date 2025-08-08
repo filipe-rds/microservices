@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func (a Adapter) Create( ctx context.Context, request *order.CreateOrderRequest) (*order.CreateOrderRequest, error){
-	var orderItems[] domain.OrderItem
-	for _, orderItem := range request.OrderItems {
+func (a Adapter) Create(ctx context.Context, request *order.CreateOrderRequest) (*order.CreateOrderResponse, error) {
+	var orderItems []domain.OrderItem
+	for _,orderItem := range request.GetOrderItems() {
 		orderItems = append(orderItems, domain.OrderItem{
 			ProductCode: orderItem.ProductCode,
 			UnitPrice: orderItem.UnitPrice,
@@ -24,12 +24,12 @@ func (a Adapter) Create( ctx context.Context, request *order.CreateOrderRequest)
 		})
 	}
 
-	newOrder := domain.NewOrder(int64(request.CostumerID), orderItems)
+	newOrder := domain.NewOrder(int64(request.GetCustomerId()), orderItems)
 	result, err := a.api.PlaceOrder(newOrder)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	return &order.CreateOrderRequest{OrderId: int32(result.ID)},nil
+	return &order.CreateOrderResponse{OrderId: int32(result.ID)}, nil
 }
 
 type Adapter struct {
@@ -58,7 +58,7 @@ func (a Adapter) Run() {
 		reflection.Register(grpcServer)
 	}
 
-	if err := grpcServer.Server(listen); err != nil {
+	if err := grpcServer.Serve(listen); err != nil {
 		log.Fatalf("Failed to serve grpc on port %d",a.port)
 	}	
 }

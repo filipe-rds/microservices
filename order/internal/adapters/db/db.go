@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
- type Order struct {
+type Order struct {
 	gorm.Model
-	CostumerID int64
+	CustomerID int64
 	Status string
 	OrderItems []OrderItem
 }
@@ -28,13 +28,9 @@ type Adapter struct {
 }
 
 func NewAdapter(dataSourceUrl string) (*Adapter, error) {
-	db, openErr := gorm.Open(mysql.Open(dataSourceUrl), &gorm.Config{})
-	if openErr != nil {
-		return nil, fmt.Errorf("DB connection error: %v", openErr)
-	}
-	err :=  db.AutoMigrate(&Order{}, OrderItem{})
-	if err != nil {
-		return nil, fmt.Errorf("DB migration error: %v", err)
+	db, OpenErr := gorm.Open(mysql.Open(dataSourceUrl), &gorm.Config{})
+	if OpenErr != nil {
+		return nil, fmt.Errorf("db connetction error: %v", OpenErr)
 	}
 	return &Adapter{db: db}, nil
 }
@@ -51,22 +47,17 @@ func (a Adapter) Get(id string) (domain.Order, error) {
 			Quantity: orderItem.Quantity,
 		})
 	}
-
-	order := domain.Order {
-		ID: int64(orderEntity.CostumerID),
-		CostumerID: orderEntity.CostumerID,
-		Status: orderEntity.Status,
+	order := domain.Order{
+		ID: int64(orderEntity.ID),
+		CustomerID: orderEntity.CustomerID,
 		OrderItems: orderItems,
 		CreatedAt: orderEntity.CreatedAt.UnixNano(),
 	}
-
 	return order, res.Error
 }
 
-
-func (a Adapter) Save(order *domain.Order) error {
+func (a Adapter) Save(order *domain.Order) error{
 	var orderItems []OrderItem
-
 	for _, orderItem := range order.OrderItems {
 		orderItems = append(orderItems, OrderItem{
 			ProductCode: orderItem.ProductCode,
@@ -74,19 +65,15 @@ func (a Adapter) Save(order *domain.Order) error {
 			Quantity: orderItem.Quantity,
 		})
 	}
-
 	orderModel := Order{
-		CostumerID: order.CostumerID,
+		CustomerID: order.CustomerID,
 		Status: order.Status,
 		OrderItems: orderItems,
 	}
-
 	res := a.db.Create(&orderModel)
-
 	if res.Error == nil {
 		order.ID = int64(orderModel.ID)
 	}
-
 	return res.Error
 }
 

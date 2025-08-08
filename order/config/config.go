@@ -1,16 +1,23 @@
 package config
 
-import(
+import (
 	"log"
 	"os"
 	"strconv"
 )
 
+func getEnvironmentValue(key string) string {
+	if os.Getenv(key) == ""{
+		log.Fatalf("%s enviroment variable is missing", key)
+	}
+	return os.Getenv(key)
+}
+
 func GetEnv() string {
 	return getEnvironmentValue("ENV")
 }
 
-func GetDataSouceURL() string {
+func GetDataSourceURl() string{
 	return getEnvironmentValue("DATA_SOURCE_URL")
 }
 
@@ -18,21 +25,12 @@ func GetPaymentServiceUrl() string{
 	return getEnvironmentValue("PAYMENT_SERVICE_URL")
 }
 
-func GetApplicationPort() int {
+func GetApplicationPort() int{
 	portStr := getEnvironmentValue("APPLICATION_PORT")
 	port, err := strconv.Atoi(portStr)
-	
+
 	if err != nil {
-		log.Fatalf("Port: %s is invalid", portStr)
+		log.Fatalf("port: %s is invalid",portStr)
 	}
-
 	return port
-}
-
-func getEnvironmentValue(key string) string {
-	if os.Getenv(key) == "" {
-		log.Fatalf("%s environment variable is missing", key)
-	}
-
-	return os.Getenv(key)
 }
