@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"log"
 
 	"github.com/filipe-rds/microservices/payment/internal/application/core/domain"
 	"github.com/filipe-rds/microservices/payment/internal/ports"
