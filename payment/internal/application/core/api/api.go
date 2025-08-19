@@ -6,6 +6,8 @@ import (
 
 	"github.com/filipe-rds/microservices/payment/internal/application/core/domain"
 	"github.com/filipe-rds/microservices/payment/internal/ports"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type Application struct {
@@ -19,10 +21,15 @@ func NewApplication(db ports.DBPort) *Application {
 }
 
 func (a Application) Charge(ctx context.Context, payment domain.Payment) (domain.Payment, error) {
-	log.Println("Iniciando o Charge...")
-	err := a.db.Save(ctx, &payment)
-	if err != nil {
-		return domain.Payment{}, err
-	}
-	return payment, nil
+    if payment.TotalPrice > 1000 {
+        return domain.Payment{}, status.Errorf(codes.InvalidArgument, "Payment over 1000 is not allowed.")
+    }
+    
+    err := a.db.Save(ctx, &payment)
+    if err != nil {
+        return domain.Payment{}, err
+    }
+    
+    return payment, nil
 }
+
