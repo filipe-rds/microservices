@@ -12,9 +12,9 @@ import (
 
 type Payment struct {
 	gorm.Model
-	CustomerID int64
+	CustomerId int64
 	Status     string
-	OrderID    int64
+	OrderId    int64
 	TotalPrice float32
 }
 
@@ -27,9 +27,9 @@ func (a Adapter) Get(ctx context.Context, id string) (domain.Payment, error) {
 	res := a.db.WithContext(ctx).First(&paymentEntity, id)
 	payment := domain.Payment{
 		ID:         int64(paymentEntity.ID),
-		CustomerID: paymentEntity.CustomerID,
+		CustomerId: paymentEntity.CustomerId,
 		Status:     paymentEntity.Status,
-		OrderId:    paymentEntity.OrderID,
+		OrderId:    paymentEntity.OrderId,
 		TotalPrice: paymentEntity.TotalPrice,
 		CreatedAt:  paymentEntity.CreatedAt.UnixNano(),
 	}
@@ -38,9 +38,9 @@ func (a Adapter) Get(ctx context.Context, id string) (domain.Payment, error) {
 
 func (a Adapter) Save(ctx context.Context, payment *domain.Payment) error {
 	orderModel := Payment{
-		CustomerID: payment.CustomerID,
+		CustomerId: payment.CustomerId,
 		Status:     payment.Status,
-		OrderID:    payment.OrderId,
+		OrderId:    payment.OrderId,
 		TotalPrice: payment.TotalPrice,
 	}
 	res := a.db.WithContext(ctx).Create(&orderModel)
