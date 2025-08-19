@@ -23,8 +23,9 @@ func NewApplication(db ports.DBPort, payment ports.PaymentPort) *Application {
 }
 
 func (a Application) PlaceOrder(ctx context.Context,order domain.Order) (domain.Order, error) {
-	ctxTimeout , cancel := context.WithTimeout (context.Background(), 2*time.Second )
+	ctxTimeout, cancel := context.WithTimeout (context.Background(), 2*time.Second )
 	defer cancel()
+	
 	err := a.db.Save(&order)
 	if err != nil {
 		return domain.Order{}, err
