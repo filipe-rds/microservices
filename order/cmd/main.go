@@ -9,7 +9,6 @@ import (
 	payment_adapter "github.com/filipe-rds/microservices/order/internal/adapters/payment"
 	shipping_adapter "github.com/filipe-rds/microservices/order/internal/adapters/shipping"
 
-	// "github.com/filipe-rds/microservices/order/internal/adapters/rest"
 	"github.com/filipe-rds/microservices/order/internal/application/core/api"
 )
 
