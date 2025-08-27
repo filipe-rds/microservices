@@ -11,17 +11,20 @@ COPY microservices-proto/ ../microservices-proto/
 
 # Generate protobuf files using the flexible script
 WORKDIR /microservices-proto
-RUN chmod +x generate.sh && ./generate.sh payment
+RUN chmod +x generate.sh && \
+    ./generate.sh order && \
+    ./generate.sh payment && \
+    ./generate.sh shipping
 
-# Return to app directory and copy payment service files
+# Return to app directory and copy order service files
 WORKDIR /app
-COPY microservices/payment/go.mod microservices/payment/go.sum ./
+COPY microservices/order/go.mod microservices/order/go.sum ./
 
 # Download dependencies
 RUN go mod download
 
-# Copy payment source code
-COPY microservices/payment/ ./
+# Copy order source code
+COPY microservices/order/ ./
 
 # Update go.mod with new protobuf dependencies
 RUN go mod tidy
@@ -40,7 +43,7 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 
 # Expose port
-EXPOSE 3001
+EXPOSE 3000
 
 # Command to run
 CMD ["./main"]
