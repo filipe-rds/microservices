@@ -1,5 +1,6 @@
 CREATE DATABASE IF NOT EXISTS `order`;
 CREATE DATABASE IF NOT EXISTS `payment`;
+CREATE DATABASE IF NOT EXISTS `shipping`;
 
 USE `order`;
 
@@ -24,6 +25,25 @@ CREATE TABLE order_items (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
+-- Tabela de produtos/estoque para validação
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Inserindo alguns produtos de exemplo
+INSERT INTO products (product_code, name, price, stock_quantity) VALUES
+('PROD001', 'Produto 1', 10.50, 100),
+('PROD002', 'Produto 2', 25.00, 50),
+('PROD003', 'Produto 3', 15.75, 75),
+('PROD004', 'Produto 4', 30.00, 25),
+('PROD005', 'Produto 5', 12.99, 200);
+
 use `payment`;
 
 CREATE TABLE payments (
@@ -35,4 +55,26 @@ CREATE TABLE payments (
     created_at BIGINT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+USE `shipping`;
+
+CREATE TABLE shippings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    delivery_days INT NOT NULL,
+    created_at BIGINT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE shipping_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    shipping_id BIGINT NOT NULL,
+    product_code VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (shipping_id) REFERENCES shippings(id) ON DELETE CASCADE
 );
