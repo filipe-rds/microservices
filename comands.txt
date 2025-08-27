@@ -48,13 +48,13 @@ grpcurl -d '{"order_id": 105, "items":[{"product_code": "PROD005", "quantity": 2
 
 ```bash
 # Acessar MySQL
-docker compose exec mysql mysql -uroot -pminhasenha
+docker compose exec database mysql -uroot -pminhasenha
 
 # Verificar databases criadas
-docker compose exec mysql mysql -uroot -pminhasenha -e "SHOW DATABASES;"
+docker compose exec database mysql -uroot -pminhasenha -e "SHOW DATABASES;"
 
 # Ver produtos cadastrados
-docker compose exec mysql mysql -uroot -pminhasenha -e "USE \`order\`; SELECT * FROM products;"
+docker compose exec database mysql -uroot -pminhasenha -e "USE \`order\`; SELECT * FROM products;"
 ```
 
 ## 🔧 COMANDOS ÚTEIS
@@ -70,6 +70,7 @@ docker compose down && docker compose build && docker compose up -d
 docker compose logs order --tail=5
 docker compose logs payment --tail=5
 docker compose logs shipping --tail=5
+docker compose logs database --tail=5
 ```
 
 ## 📊 INFORMAÇÕES ESSENCIAIS

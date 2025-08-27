@@ -1,5 +1,5 @@
 services:
-  mysql:
+  database:
     image: mysql:8.0
     container_name: microservices-database
     environment:
@@ -25,13 +25,13 @@ services:
       dockerfile: microservices/payment/Dockerfile
     container_name: microservices-payment
     environment:
-      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/payment?charset=utf8mb4&parseTime=True&loc=Local"
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/payment?charset=utf8mb4&parseTime=True&loc=Local"
       APPLICATION_PORT: "3001"
       ENV: "development"
     ports:
       - "3001:3001"
     depends_on:
-      mysql:
+      database:
         condition: service_healthy
     networks:
       - microservices-net
@@ -43,13 +43,13 @@ services:
       dockerfile: microservices/shipping/Dockerfile
     container_name: microservices-shipping
     environment:
-      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/shipping?charset=utf8mb4&parseTime=True&loc=Local"
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/shipping?charset=utf8mb4&parseTime=True&loc=Local"
       APPLICATION_PORT: "3002"
       ENV: "development"
     ports:
       - "3002:3002"
     depends_on:
-      mysql:
+      database:
         condition: service_healthy
     networks:
       - microservices-net
@@ -61,7 +61,7 @@ services:
       dockerfile: microservices/order/Dockerfile
     container_name: microservices-order
     environment:
-      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/order?charset=utf8mb4&parseTime=True&loc=Local"
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/order?charset=utf8mb4&parseTime=True&loc=Local"
       APPLICATION_PORT: "3000"
       ENV: "development"
       PAYMENT_SERVICE_URL: "payment:3001"
@@ -69,7 +69,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      mysql:
+      database:
         condition: service_healthy
       payment:
         condition: service_started
