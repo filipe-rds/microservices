@@ -4,18 +4,20 @@ services:
     container_name: microservices-mysql
     environment:
       MYSQL_ROOT_PASSWORD: minhasenha
-      MYSQL_DATABASE: order
+      MYSQL_DATABASE: microservices
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init:/docker-entrypoint-initdb.d
     networks:
       - microservices-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pminhasenha"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      interval: 30s
 
   payment:
     build:
