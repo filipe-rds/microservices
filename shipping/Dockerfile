@@ -1,15 +1,15 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
 
-# Install protoc and dependencies
-RUN apk add --no-cache protobuf protobuf-dev
+# Install protoc, git, bash and dependencies
+RUN apk add --no-cache protobuf protobuf-dev git bash
 
 WORKDIR /app
 
-# Copy proto files and generation script
-COPY microservices-proto/ ../microservices-proto/
+# Clone the microservices-proto repository
+RUN git clone https://github.com/filipe-rds/microservices-proto.git ../microservices-proto
 
-# Generate protobuf files using the flexible script
+# Generate protobuf files using the script from the cloned repository
 WORKDIR /microservices-proto
 RUN chmod +x generate.sh && ./generate.sh shipping
 
