@@ -1,0 +1,87 @@
+services:
+  database:
+    image: mysql:8.0
+    container_name: microservices-database
+    environment:
+      MYSQL_ROOT_PASSWORD: minhasenha
+      MYSQL_DATABASE: microservices
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pminhasenha"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      interval: 30s
+
+  payment:
+    build:
+      context: ..
+      dockerfile: microservices/payment/Dockerfile
+    container_name: microservices-payment
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/payment?charset=utf8mb4&parseTime=True&loc=Local"
+      APPLICATION_PORT: "3001"
+      ENV: "development"
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    restart: on-failure
+
+  shipping:
+    build:
+      context: ..
+      dockerfile: microservices/shipping/Dockerfile
+    container_name: microservices-shipping
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/shipping?charset=utf8mb4&parseTime=True&loc=Local"
+      APPLICATION_PORT: "3002"
+      ENV: "development"
+    ports:
+      - "3002:3002"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    restart: on-failure
+
+  order:
+    build:
+      context: ..
+      dockerfile: microservices/order/Dockerfile
+    container_name: microservices-order
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(database:3306)/order?charset=utf8mb4&parseTime=True&loc=Local"
+      APPLICATION_PORT: "3000"
+      ENV: "development"
+      PAYMENT_SERVICE_URL: "payment:3001"
+      SHIPPING_SERVICE_URL: "shipping:3002"
+    ports:
+      - "3000:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+      payment:
+        condition: service_started
+      shipping:
+        condition: service_started
+    networks:
+      - microservices-net
+    restart: on-failure
+
+volumes:
+  mysql_data:
+
+networks:
+  microservices-net:
+    driver: bridge

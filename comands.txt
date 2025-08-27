@@ -1,21 +1,105 @@
-// Inicializando o docker
-docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=minhasenha -v "$(pwd)/db.sql:/docker-entrypoint-initdb.d/init.sql" mysql         
+# 🚀 COMANDOS ESSENCIAIS - MICROSERVICES gRPC
 
-// Executar o banco de dados via container
-docker exec -it [container-id] mysql -uroot -p     
-senha=minhasenha
+## 📋 SETUP INICIAL
 
-// Inicializar o serviço payment
-DB_DRIVER=mysql DATA_SOURCE_URL=root:minhasenha@tcp(127.0.0.1:3306)/payment APPLICATION_PORT=3001 ENV=development go run cmd/main.go
+```bash
+# 1. Inicializar projeto completo
+docker compose build && docker compose up -d
 
-// Inicializar o serviço order
-DATA_SOURCE_URL=root:minhasenha@tcp(127.0.0.1:3306)/order APPLICATION_PORT=3000 ENV=development PAYMENT_SERVICE_URL=localhost:3001 go run cmd/main.go
+# 2. Verificar status dos serviços
+docker compose ps
 
-// Teste de comunicação
-grpcurl -d '{"customer_id": 123 , "order_items":[{"product_code": "prod", "quantity": 4, "unit_price": 12}]}' -plaintext localhost:3000 Order/Create
+# 3. Ver logs (se necessário)
+docker compose logs --tail=10
+```
 
-// Teste do erro com totalprirce > 1000
-grpcurl -d '{"customer_id": 123 , "order_items":[{"product_code": "prod", "quantity": 10, "unit_price": 120}]}' -plaintext localhost:3000 Order/Create
+## 🧪 TESTES ESSENCIAIS
 
-// Teste do erro com quantity > 50
-grpcurl -d '{"customer_id": 123 , "order_items":[{"product_code": "prod", "quantity": 51, "unit_price": 1}]}' -plaintext localhost:3000 Order/Create
+### ✅ Testes de Integração Completa (Order → Payment → Shipping)
+
+```bash
+# Teste 1: Pedido válido simples (Total: R$ 42,00)
+grpcurl -d '{"customer_id": 123, "order_items":[{"product_code": "PROD001", "quantity": 4, "unit_price": 10.50}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 2: Pedido com múltiplos produtos (Total: R$ 81,50)
+grpcurl -d '{"customer_id": 456, "order_items":[{"product_code": "PROD001", "quantity": 3, "unit_price": 10.50}, {"product_code": "PROD002", "quantity": 2, "unit_price": 25.00}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 3: Erro - Total > R$ 1000 (DEVE FALHAR)
+grpcurl -d '{"customer_id": 123, "order_items":[{"product_code": "PROD001", "quantity": 10, "unit_price": 120}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 4: Erro - Quantidade > 50 unidades (DEVE FALHAR)
+grpcurl -d '{"customer_id": 123, "order_items":[{"product_code": "PROD001", "quantity": 51, "unit_price": 1}]}' -plaintext localhost:3000 Order/Create
+```
+
+### 📦 Testes do Shipping Service (Cálculo de Entrega)
+
+```bash
+# Teste: 3 itens → 1 dia de entrega
+grpcurl -d '{"order_id": 100, "items":[{"product_code": "PROD001", "quantity": 3}]}' -plaintext localhost:3002 Shipping/Create
+
+# Teste: 10 itens → 3 dias de entrega
+grpcurl -d '{"order_id": 102, "items":[{"product_code": "PROD003", "quantity": 10}]}' -plaintext localhost:3002 Shipping/Create
+
+# Teste: 23 itens → 5 dias de entrega
+grpcurl -d '{"order_id": 105, "items":[{"product_code": "PROD005", "quantity": 23}]}' -plaintext localhost:3002 Shipping/Create
+```
+
+## 🗃️ BANCO DE DADOS
+
+```bash
+# Acessar MySQL
+docker compose exec database mysql -uroot -pminhasenha
+
+# Verificar databases criadas
+docker compose exec database mysql -uroot -pminhasenha -e "SHOW DATABASES;"
+
+# Ver produtos cadastrados
+docker compose exec database mysql -uroot -pminhasenha -e "USE \`order\`; SELECT * FROM products;"
+```
+
+## 🔧 COMANDOS ÚTEIS
+
+```bash
+# Parar serviços
+docker compose down
+
+# Reiniciar após mudanças
+docker compose down && docker compose build && docker compose up -d
+
+# Ver logs específicos
+docker compose logs order --tail=5
+docker compose logs payment --tail=5
+docker compose logs shipping --tail=5
+docker compose logs database --tail=5
+```
+
+## 📊 INFORMAÇÕES ESSENCIAIS
+
+**Portas dos Serviços:**
+- Order Service: localhost:3000 (gRPC)
+- Payment Service: localhost:3001 (gRPC)
+- Shipping Service: localhost:3002 (gRPC)
+- MySQL: localhost:3306 (root/minhasenha)
+
+**Produtos Disponíveis:**
+- PROD001: R$ 10,50 (100 unidades)
+- PROD002: R$ 25,00 (50 unidades)
+- PROD003: R$ 15,75 (75 unidades)
+- PROD004: R$ 30,00 (25 unidades)
+- PROD005: R$ 12,99 (200 unidades)
+
+**Regras de Negócio:**
+- Limite de valor: R$ 1000 por pedido
+- Limite de quantidade: 50 unidades por pedido
+- Cálculo de entrega: 1 + (quantidade_total / 5) dias
+
+**Fluxo:** Order → Payment → Shipping → Resposta com Order ID
+
+## 🎯 VALIDAÇÃO RÁPIDA
+
+```bash
+# Teste rápido completo
+grpcurl -d '{"customer_id": 999, "order_items":[{"product_code": "PROD001", "quantity": 2, "unit_price": 10.50}]}' -plaintext localhost:3000 Order/Create
+```
+
+✅ **Se retornar Order ID, todo o sistema está funcionando!**
