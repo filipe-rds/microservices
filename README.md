@@ -4,18 +4,18 @@ Projeto acadêmico implementando uma arquitetura de microservices com comunicaç
 
 ## 📋 Índice
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Arquitetura](#arquitetura)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação e Execução](#instalação-e-execução)
-- [Uso da API](#uso-da-api)
-- [Testes](#testes)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Arquitetura](#️-arquitetura)
+- [Tecnologias Utilizadas](#️-tecnologias-utilizadas)
+- [Funcionalidades Implementadas](#funcionalidades-implementadas)
+- [Executando com Docker Compose](#executando-com-docker-compose)
+- [Testando a API](#testando-a-api)
 - [Banco de Dados](#banco-de-dados)
-- [Monitoramento](#monitoramento)
-- [Troubleshooting](#troubleshooting)
-- [Contribuição](#contribuição)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Desenvolvimento](#desenvolvimento)
+- [Logs e Troubleshooting](#logs-e-troubleshooting)
+- [Regras de Negócio](#regras-de-negócio)
+- [Pontos Extras](#pontos-extras-bônus)
 
 ## 🎯 Sobre o Projeto
 
@@ -123,11 +123,11 @@ O projeto segue os princípios da **Arquitetura Hexagonal** (Ports & Adapters) e
 
 2. **Execute os containers:**
    ```bash
-   docker compose up --build -d
+   docker compose build && docker compose up -d
    ```
 
 3. **Aguarde os serviços iniciarem:**
-   - MySQL: porta 3306
+   - Database: porta 3306
    - Order: porta 3000
    - Payment: porta 3001
    - Shipping: porta 3002
@@ -162,24 +162,66 @@ grpcurl -plaintext -d '{
 }' localhost:3000 Order/Create
 ```
 
+### Testes Essenciais
+
+Para uma validação completa do sistema, execute os seguintes testes:
+
+```bash
+# Teste 1: Pedido válido simples
+grpcurl -d '{"customer_id": 123, "order_items":[{"product_code": "PROD001", "quantity": 4, "unit_price": 10.50}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 2: Pedido com múltiplos produtos
+grpcurl -d '{"customer_id": 456, "order_items":[{"product_code": "PROD001", "quantity": 3, "unit_price": 10.50}, {"product_code": "PROD002", "quantity": 2, "unit_price": 25.00}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 3: Erro - Valor acima do limite (deve falhar)
+grpcurl -d '{"customer_id": 123, "order_items":[{"product_code": "PROD001", "quantity": 10, "unit_price": 120}]}' -plaintext localhost:3000 Order/Create
+
+# Teste 4: Shipping Service - Cálculo de prazo
+grpcurl -d '{"order_id": 100, "items":[{"product_code": "PROD001", "quantity": 10}]}' -plaintext localhost:3002 Shipping/Create
+```
+
+> **Dica**: Consulte o arquivo `comands.txt` para uma lista completa de comandos de teste.
+
 ## Banco de Dados
 
-O projeto inicializa automaticamente com:
+O projeto inicializa automaticamente com MySQL 8.0 e cria:
 
-- **Database `order`**: tabelas de pedidos e produtos
-- **Database `payment`**: tabela de pagamentos  
-- **Database `shipping`**: tabelas de envio
-- **Produtos de exemplo**: PROD001 a PROD005
+- **Database `order`**: tabelas orders, order_items, products
+- **Database `payment`**: tabela payments  
+- **Database `shipping`**: tabelas shippings, shipping_items
+- **Produtos pré-cadastrados**: PROD001 a PROD005 com preços e estoque definidos
+
+### Produtos Disponíveis:
+- **PROD001**: Produto Premium 1 - R$ 10,50 (100 unidades)
+- **PROD002**: Produto Especial 2 - R$ 25,00 (50 unidades)
+- **PROD003**: Produto Padrão 3 - R$ 15,75 (75 unidades)
+- **PROD004**: Produto Deluxe 4 - R$ 30,00 (25 unidades)
+- **PROD005**: Produto Econômico 5 - R$ 12,99 (200 unidades)
+
+### Acesso ao Banco:
+```bash
+# Acessar MySQL via Docker Compose
+docker compose exec database mysql -uroot -pminhasenha
+
+# Verificar databases criadas
+docker compose exec database mysql -uroot -pminhasenha -e "SHOW DATABASES;"
+
+# Ver produtos cadastrados
+docker compose exec database mysql -uroot -pminhasenha -e "USE \`order\`; SELECT * FROM products;"
+```
 
 ## Estrutura do Projeto
 
 ```
 microservices/
-├── order/              # Microsserviço de pedidos
-├── payment/            # Microsserviço de pagamentos
-├── shipping/           # Microsserviço de envio
+├── order/              # Microservice de pedidos
+├── payment/            # Microservice de pagamentos
+├── shipping/           # Microservice de envio
+├── database/           # Configurações e scripts de banco
+│   └── init/
+│       └── db.sql     # Script de inicialização do banco
 ├── docker-compose.yml  # Configuração Docker Compose
-└── db.sql             # Script de inicialização do banco
+└── comands.txt        # Comandos essenciais para testes
 
 microservices-proto/    # Definições Protocol Buffers
 ├── order/
@@ -191,9 +233,9 @@ microservices-proto/    # Definições Protocol Buffers
 
 ### Executando localmente
 
-1. **Inicie o MySQL:**
+1. **Inicie o Database:**
    ```bash
-   docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=minhasenha -p 3306:3306 mysql:8.0
+   docker run -d --name database -e MYSQL_ROOT_PASSWORD=minhasenha -p 3306:3306 mysql:8.0
    ```
 
 2. **Configure as variáveis de ambiente:**
@@ -224,7 +266,7 @@ microservices-proto/    # Definições Protocol Buffers
   docker compose logs order
   docker compose logs payment
   docker compose logs shipping
-  docker compose logs mysql
+  docker compose logs database
   ```
 
 - **Acessar container para debug:**
@@ -235,14 +277,19 @@ microservices-proto/    # Definições Protocol Buffers
 ## Regras de Negócio
 
 1. **Validação de Produtos**: Todos os produtos do pedido devem existir na tabela `products`
-2. **Limite de Quantidade**: Máximo 50 unidades por pedido
-3. **Fluxo de Processo**: Order → Payment → Shipping
-4. **Cálculo de Entrega**: 1 dia + 1 dia a cada 5 unidades adicionais
-5. **Tratamento de Erro**: Se payment falha, order é cancelado. Se shipping falha, apenas log é gerado.
+2. **Limite de Valor**: Máximo R$ 1000 por pedido
+3. **Limite de Quantidade**: Máximo 50 unidades por pedido
+4. **Fluxo de Processo**: Order → Payment → Shipping
+5. **Cálculo de Entrega**: 1 dia base + 1 dia adicional a cada 5 unidades
+6. **Tratamento de Erro**: Se payment falha, order é cancelado. Se shipping falha, apenas log é gerado.
 
 ## Pontos Extras (Bônus)
 
-- ✅ **Docker**: Projeto totalmente containerizado
-- ✅ **Documentação**: README completo com instruções
-- ✅ **Arquitetura Hexagonal**: Implementada em todos os serviços
-- ✅ **Tratamento de Erros**: Códigos gRPC apropriados
+- ✅ **Docker Compose**: Orquestração completa com container `microservices-database`
+- ✅ **Arquitetura Hexagonal**: Implementada em todos os microservices
+- ✅ **Tratamento de Erros**: Códigos gRPC apropriados para cada situação
+- ✅ **Banco Organizado**: Estrutura `database/init/` para scripts de inicialização
+- ✅ **Documentação Completa**: README detalhado + arquivo `comands.txt` com testes
+- ✅ **Validações de Negócio**: Limite de valor R$ 1000 e quantidade 50 unidades
+- ✅ **Cálculo de Entrega**: Algoritmo baseado em quantidade de itens
+- ✅ **Comunicação gRPC**: Integração perfeita entre Order → Payment → Shipping
