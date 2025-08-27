@@ -11,14 +11,16 @@ import (
 )
 
 type Application struct {
-	db ports.DBPort
+	db      ports.DBPort
 	payment ports.PaymentPort
+	shipping ports.ShippingPort
 }
 
-func NewApplication(db ports.DBPort, payment ports.PaymentPort) *Application {
+func NewApplication(db ports.DBPort, payment ports.PaymentPort, shipping ports.ShippingPort) *Application {
 	return &Application{
-		db: db,
+		db:      db,
 		payment: payment,
+		shipping: shipping,
 	}
 }
 
@@ -26,7 +28,18 @@ func (a Application) PlaceOrder(ctx context.Context,order domain.Order) (domain.
 	ctxTimeout, cancel := context.WithTimeout (context.Background(), 2*time.Second )
 	defer cancel()
 	
-	err := a.db.Save(&order)
+	// Validar se os produtos existem no banco
+	var productCodes []string
+	for _, item := range order.OrderItems {
+		productCodes = append(productCodes, item.ProductCode)
+	}
+	
+	err := a.db.ValidateProducts(productCodes)
+	if err != nil {
+		return domain.Order{}, status.Error(codes.InvalidArgument, err.Error())
+	}
+	
+	err = a.db.Save(&order)
 	if err != nil {
 		return domain.Order{}, err
 	}
@@ -59,8 +72,16 @@ func (a Application) PlaceOrder(ctx context.Context,order domain.Order) (domain.
 	order.Status = "Paid"
 	updateErr := a.db.Save(&order)
 	if updateErr != nil {
-		return domain.Order{}, err
+		return domain.Order{}, updateErr
 	}
+
+	// Chamar shipping apenas se o pagamento foi bem-sucedido
+	_, shippingErr := a.shipping.CreateShipping(ctxTimeout, &order)
+	if shippingErr != nil {
+		log.Printf("Warning: Failed to create shipping for order %d: %v", order.ID, shippingErr)
+		// Não falha o pedido se o shipping falhar, apenas loga o erro
+	}
+
 	return order, nil
 }
 

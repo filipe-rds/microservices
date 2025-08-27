@@ -23,6 +23,14 @@ type OrderItem struct {
 	OrderId uint
 }
 
+type Product struct {
+	gorm.Model
+	ProductCode   string  `gorm:"uniqueIndex;not null"`
+	Name          string  `gorm:"not null"`
+	Price         float32 `gorm:"not null"`
+	StockQuantity int     `gorm:"not null;default:0"`
+}
+
 type Adapter struct {
 	db *gorm.DB
 }
@@ -75,6 +83,20 @@ func (a Adapter) Save(order *domain.Order) error{
 		order.ID = int64(orderModel.ID)
 	}
 	return res.Error
+}
+
+func (a Adapter) ValidateProducts(productCodes []string) error {
+	var count int64
+	err := a.db.Model(&Product{}).Where("product_code IN ?", productCodes).Count(&count).Error
+	if err != nil {
+		return fmt.Errorf("error validating products: %v", err)
+	}
+	
+	if int(count) != len(productCodes) {
+		return fmt.Errorf("one or more products do not exist in the database")
+	}
+	
+	return nil
 }
 
 

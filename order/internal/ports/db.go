@@ -5,4 +5,5 @@ import "github.com/filipe-rds/microservices/order/internal/application/core/doma
 type DBPort interface {
 	Get(id string) (domain.Order, error)
 	Save(*domain.Order) error
+	ValidateProducts(productCodes []string) error
 }
